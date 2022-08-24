@@ -39,7 +39,7 @@ report.setSentence("SELECT "
         + "INNER JOIN receipts receipts "
             + "ON (tickets.id = receipts.id) "
     + "WHERE ?(QBF_FILTER) "
-    + "GROUP BY DATE(receipts.datenew) "
+    + "GROUP BY products.id, receipts.datenew "
     + "ORDER BY 5 ASC");
 
 report.addParameter("receipts.DATENEW");

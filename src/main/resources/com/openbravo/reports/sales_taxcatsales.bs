@@ -38,7 +38,7 @@ report.setSentence("SELECT " +
         "INNER JOIN taxes taxes ON (taxlines.taxid = taxes.id)) " +
         "INNER JOIN tickets tickets ON (tickets.id = receipts.id)) " +
     "WHERE ?(QBF_FILTER) "+
-    "GROUP BY taxes.name, YEAR(receipts.datenew), MONTH(receipts.datenew), DAY(receipts.datenew) ");
+    "GROUP BY taxes.name, receipts.datenew ");
 
 report.addParameter("receipts.DATENEW");
 report.addParameter("receipts.DATENEW");

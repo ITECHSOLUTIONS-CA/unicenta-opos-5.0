@@ -45,7 +45,6 @@ report.setSentence("SELECT " +
             	    "LEFT OUTER JOIN attributesetinstance ON stockcurrent.ATTRIBUTESETINSTANCE_ID = attributesetinstance.ID " +
                     "LEFT OUTER JOIN suppliers suppliers ON (suppliers.ID = products.SUPPLIER) " +
             "WHERE ?(QBF_FILTER) " +
-            "GROUP BY locations.ID, products.CATEGORY, products.REFERENCE, DESCRIPTION " +
             "ORDER BY categories.NAME, products.NAME, stockcurrent.LOCATION");
 
 report.addParameter("stockcurrent.LOCATION");

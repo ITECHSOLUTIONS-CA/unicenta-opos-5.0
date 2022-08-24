@@ -326,7 +326,10 @@ public class StockManagement extends JPanel implements JPanelView {
   }
 
   public void clearStockTable() {
-
+    
+    if (!(jTableProductStock.getModel() instanceof aStockTableModel))
+        return ;
+    
     aStockTableModel model = (aStockTableModel) jTableProductStock.getModel();
 
     while (model.getRowCount() > 0) {
@@ -385,8 +388,13 @@ public class StockManagement extends JPanel implements JPanelView {
     }
 
     int i = m_invlines.getSelectedRow();
-    lQty = m_invlines.getLine(i).getMultiply();
-    lVal = m_invlines.getLine(i).getPrice() * lQty;
+    
+    if (i >= 0)
+    {
+        lQty = m_invlines.getLine(i).getMultiply();
+        lVal = m_invlines.getLine(i).getPrice() * lQty;
+    }
+    
 // deliberately explicit
     lVal = Math.round(lVal * 100);
     lVal = lVal / 100;

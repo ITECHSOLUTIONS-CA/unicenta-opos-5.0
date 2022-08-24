@@ -34,7 +34,7 @@
            ON (ticketlines.PRODUCT = products.ID))
        INNER JOIN categories categories
           ON (products.CATEGORY = categories.ID)
-GROUP BY products.REFERENCE]]>
+GROUP BY categories.id, products.id, taxes.rate, closedcash.datestart, closedcash.dateend]]>
 	</queryString>
 	<field name="HOST" class="java.lang.String"/>
 	<field name="MONEY" class="java.lang.String"/>

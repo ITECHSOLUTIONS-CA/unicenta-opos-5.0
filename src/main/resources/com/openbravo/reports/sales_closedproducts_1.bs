@@ -43,7 +43,7 @@ report.setSentence("SELECT categories.NAME AS catname, " +
         "INNER JOIN products products ON (ticketlines.PRODUCT = products.ID)) " +
        "INNER JOIN categories categories ON (products.CATEGORY = categories.ID) " +
     "WHERE ?(QBF_FILTER) " +
-"GROUP BY products.REFERENCE");
+"GROUP BY categories.id, products.id, taxes.rate, closedcash.datestart, closedcash.dateend");
 
 report.addParameter("closedcash.DATEEND");
 report.addParameter("closedcash.DATEEND");

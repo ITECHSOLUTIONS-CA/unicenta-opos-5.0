@@ -42,7 +42,6 @@ report.setSentence("SELECT products.ID, "
         + "LEFT OUTER JOIN stockcurrent stockcurrent "
             + "ON (stockcurrent.product = products.id) "
     + "WHERE ?(QBF_FILTER) "
-    + "GROUP BY products.ID "
     + "ORDER BY CATEGORYNAME ASC, products.NAME ASC");
 
 report.addParameter("stockcurrent.LOCATION");

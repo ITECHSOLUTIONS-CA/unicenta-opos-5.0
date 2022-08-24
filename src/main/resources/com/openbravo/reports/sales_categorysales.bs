@@ -39,7 +39,7 @@ report.setSentence("SELECT " +
       "INNER JOIN receipts R ON (T.id = R.id)) " +
      "INNER JOIN taxlines TXL ON (TXL.receipt = R.id) AND (TXL.taxid = TX.id) " +
     "WHERE ?(QBF_FILTER) " +
-    "GROUP BY C.id " +
+    "GROUP BY C.id, R.datenew, C.name " +
     "ORDER BY CATNAME ASC");
 
 report.addParameter("R.DATENEW");

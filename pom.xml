@@ -370,7 +370,7 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>5.1.39</version>
+      <version>8.0.30</version>
     </dependency>
     <dependency>
       <groupId>org.apache.derby</groupId>
@@ -547,10 +547,10 @@
     </dependency>
   </dependencies>
   <repositories>
-    <repository>
+    <!--<repository>
       <id>spring-repo</id>
       <url>https://repo.spring.io/plugins-release/</url>
-    </repository>
+    </repository>-->
     <repository>
       <id>unicenta-repo</id>
       <url>https://repo.unicenta.org/maven2/</url>
@@ -577,6 +577,11 @@
       <name>Repository for library Library[restapi]</name>
       <url>https://download.java.net/maven/2/</url>
       <layout>default</layout>
+    </repository>
+    <repository>
+        <id>jaspersoft</id>
+        <url>https://jaspersoft.jfrog.io/ui/native/third-party-ce-artifacts</url>
+        <layout>default</layout>
     </repository>
   </repositories>
 

@@ -987,8 +987,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         "ON (products.ID = stockcurrent.product)) " +
                         "INNER JOIN locations locations " +
                         "ON (stockcurrent.location = locations.id) " +
-                        "WHERE products.id= ? " +
-                        "GROUP BY locations.name",
+                        "WHERE products.id= ? "/*,
+                        "GROUP BY locations.name"*/,
                 SerializerWriteString.INSTANCE,
                 ProductStock.getSerializerRead()).list(pId);
     }

@@ -266,7 +266,7 @@ public class AppConfig implements AppProperties {
     m_propsconfig.setProperty("override.check", "false");
     m_propsconfig.setProperty("override.pin", "");
 
-    m_propsconfig.setProperty("db.driverlib", new File(new File(dirname),"mysql-connector-java-5.1.39.jar").getAbsolutePath());
+    m_propsconfig.setProperty("db.driverlib", new File(new File(dirname),"mysql-connector-java-8.0.30.jar").getAbsolutePath());
     m_propsconfig.setProperty("db.engine", "MySQL");
     m_propsconfig.setProperty("db.driver", "com.mysql.jdbc.Driver");
 

@@ -32,7 +32,7 @@ report.setSentence("SELECT " +
                     "FROM receipts " +
 			"LEFT JOIN payments ON receipts.ID = payments.RECEIPT " +
                     "WHERE ?(QBF_FILTER) " +
-                    "GROUP BY receipts.DATENEW, payments.PAYMENT, payments.TENDERED");
+                    "GROUP BY receipts.DATENEW, payments.PAYMENT, payments.TENDERED, payments.VOUCHER");
 
 report.addParameter("receipts.DATENEW");
 report.addParameter("receipts.DATENEW");

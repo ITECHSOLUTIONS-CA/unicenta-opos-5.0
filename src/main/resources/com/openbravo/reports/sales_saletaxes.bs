@@ -36,7 +36,6 @@ report.setSentence(
                 "WHERE payments.RECEIPT = receipts.ID AND " +
                     "receipts.ID = taxlines.RECEIPT AND receipts.ID=tickets.ID AND " +
                     "taxlines.TAXID = taxes.ID AND taxes.CATEGORY = taxcategories.ID AND ?(QBF_FILTER) "+
-                    "GROUP BY tickets.tickettype,tickets.TICKETID " +
                 "ORDER BY receipts.datenew ASC, tickets.tickettype ASC");
 
 report.addParameter("receipts.DATENEW");
