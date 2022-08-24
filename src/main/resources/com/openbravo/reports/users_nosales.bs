@@ -28,8 +28,7 @@ report.setSentence("SELECT " +
         "FROM draweropened draweropened, people people " +
         "WHERE (UPPER(draweropened.name) LIKE UPPER(people.name)) " +
             "AND ?(QBF_FILTER) " +
-        "GROUP BY draweropened.opendate " +
-        "ORDER BY draweropened.opendate DESC");
+        "GROUP BY people.name, draweropened.ticketid ");
 
 
 report.addParameter("draweropened.OPENDATE");

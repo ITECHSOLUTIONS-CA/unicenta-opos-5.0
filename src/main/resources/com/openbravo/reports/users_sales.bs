@@ -33,7 +33,7 @@ report.setSentence("SELECT people.name, "
       + "AND (payments.receipt = receipts.id) AND (tickets.person = people.id) "
       + "AND (tickets.id = receipts.id) AND (payments.receipt = receipts.id) "
       + "AND ?(QBF_FILTER) "
-+ "GROUP BY tickets.ticketid");
++ "GROUP BY people.name, receipts.datenew, tickets.ticketid");
 
 report.addParameter("receipts.DATENEW");
 report.addParameter("receipts.DATENEW");
