@@ -145,7 +145,10 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 new Field("MEMODATE", Datas.TIMESTAMP, Formats.DATE),
 
                 new Field("ISCATALOG", Datas.BOOLEAN, Formats.BOOLEAN),
-                new Field("CATORDER", Datas.INT, Formats.INT)
+                new Field("CATORDER", Datas.INT, Formats.INT),
+                new Field(AppLocal.getIntString("label.base.pricebuy"), Datas.DOUBLE, Formats.CURRENCY),
+                new Field(AppLocal.getIntString("label.base.pricesell"), Datas.DOUBLE, Formats.CURRENCY),
+                new Field(AppLocal.getIntString("label.currency.base"), Datas.STRING, Formats.STRING)
         );
 
 // creating customers object here for now for future global reuse
@@ -1968,7 +1971,10 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "THEN " + s.DB.FALSE()
                         + " ELSE " + s.DB.TRUE()
                         + " END, "
-                        + "C.CATORDER "
+                        + "C.CATORDER, "
+                        + "P.BASEPRICEBUY, "
+                        + "P.BASEPRICESELL, "
+                        + "P.BASECURRENCY "
                         + "FROM products P LEFT OUTER JOIN products_cat C "
                         + "ON P.ID = C.PRODUCT "
                         + "WHERE ?(QBF_FILTER) "
@@ -2025,20 +2031,25 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "PRINTTO, "
                         + "SUPPLIER, "
                         + "UOM, "
-                        + "MEMODATE ) "
+                        + "MEMODATE, "
+                        + "BASEPRICEBUY, "
+                        + "BASEPRICESELL, "
+                        + "BASECURRENCY) "
                         + "VALUES ("
                         + "?, ?, ?, ?, ?, ?, "
                         + "?, ?, ?, ?, ?, ?, "
                         + "?, ?, ?, ?, ?, ?, "
                         + "?, ?, ?, ?, ?, ?, "
-                        + "?, ?, ?, ?, ?, ?)"
+                        + "?, ?, ?, ?, ?, ?, "
+                        + "?, ?, ?)"
                         , new SerializerWriteBasicExt(productsRow.getDatas(),
                         new int[]{0,
                                 1, 2, 3, 4, 5, 6,
                                 7, 8, 9, 10, 11, 12,
                                 13, 14, 15, 16, 17, 18,
                                 19, 20, 21, 22, 23, 24,
-                                25, 26, 27, 28, 29}))
+                                25, 26, 27, 28, 29, 32
+                                , 33, 34}))
 
                         .exec(params);
 
@@ -2095,7 +2106,10 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "PRINTTO = ?, "
                         + "SUPPLIER = ?, "
                         + "UOM = ?, "
-                        + "MEMODATE = ? "
+                        + "MEMODATE = ?, "
+                        + "BASEPRICEBUY = ?, "
+                        + "BASEPRICESELL = ?, "
+                        + "BASECURRENCY = ? "
                         + "WHERE ID = ?"
                         , new SerializerWriteBasicExt(productsRow.getDatas(),
                         new int[]{0,
@@ -2104,7 +2118,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                                 11, 12, 13, 14, 15,
                                 16, 17, 18, 19, 20,
                                 21, 22, 23, 24, 25,
-                                26, 27, 28, 29, 0}))
+                                26, 27, 28, 29, 32
+                                , 33, 34, 0}))
                         .exec(params);
                 if (i > 0) {
                     if (((Boolean)values[30])) {
