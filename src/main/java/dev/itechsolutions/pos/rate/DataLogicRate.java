@@ -176,6 +176,22 @@ public class DataLogicRate extends BeanFactoryDataSingle {
         return i;
     }
     
+    public int updatePriceFromCurrency(Object params) throws BasicException {
+        
+        Object[] values = (Object[]) params;
+        
+        CurrencyRate rate = new CurrencyRate(values);
+        
+        List<ITSProductInfo> products = getByBaseCurrencyId(rate.getCurrencyId());
+        
+        int updates = 0;
+        
+        for (ITSProductInfo product: products)
+            updates += updateProductPrice(product, rate);
+        
+        return updates;
+    }
+    
     private void afterDeleteRate(Object [] values) throws BasicException {
         CurrencyRate rate = new CurrencyRate(values);
         
@@ -206,7 +222,7 @@ public class DataLogicRate extends BeanFactoryDataSingle {
             updateProductPrice(product, actualRate);
     }
     
-    private void updateProductPrice(ITSProductInfo product, CurrencyRate rate) throws BasicException {
+    private int updateProductPrice(ITSProductInfo product, CurrencyRate rate) throws BasicException {
         
         double priceBuy = NumberUtil.round(product.getBasePriceBuy() * rate.getRate(), 2);
         double priceSellTax = NumberUtil.round(product.getBasePriceSell() * rate.getRate(), 2);
@@ -219,12 +235,12 @@ public class DataLogicRate extends BeanFactoryDataSingle {
         product.setPriceBuy(priceBuy);
         product.setPriceSell(priceSell);
         
-        updateProduct(product);
+        return updateProduct(product);
     }
     
-    private void updateProduct(ITSProductInfo product) throws BasicException {
+    private int updateProduct(ITSProductInfo product) throws BasicException {
         
-        new PreparedSentence(s, "UPDATE products SET PRICEBUY = ?"
+       return new PreparedSentence(s, "UPDATE products SET PRICEBUY = ?"
                 + ", PRICESELL = ?"
                 + " WHERE ID = ?"
                 , new SerializerWriteBasic(Datas.DOUBLE, Datas.DOUBLE, Datas.STRING))
@@ -318,6 +334,15 @@ public class DataLogicRate extends BeanFactoryDataSingle {
                 }, (dr) -> new CurrencyRate(dr.getString(1),dr.getDouble(2)
                         , dr.getTimestamp(3), dr.getString(4)))
                 .find(currencyId, date);
+    }
+    
+    public CurrencyRate getById(String id) throws BasicException {
+        return (CurrencyRate) new PreparedSentence(s, "SELECT id, rate, datefrom, currencyId"
+                + " FROM currencyRate WHERE id = ?"
+                , SerializerWriteString.INSTANCE
+                , (dr) -> new CurrencyRate(dr.getString(1),dr.getDouble(2)
+                        , dr.getTimestamp(3), dr.getString(4)))
+                .find(id);
     }
     
     /**

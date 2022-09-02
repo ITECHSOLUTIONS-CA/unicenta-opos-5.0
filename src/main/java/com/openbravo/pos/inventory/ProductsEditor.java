@@ -2509,7 +2509,7 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
     private void m_jPriceSellTaxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jPriceSellTaxActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_m_jPriceSellTaxActionPerformed
-
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private com.alee.extended.colorchooser.WebColorPicker colourChooser;
     private javax.swing.JLabel jBaseCurrencyLabel;

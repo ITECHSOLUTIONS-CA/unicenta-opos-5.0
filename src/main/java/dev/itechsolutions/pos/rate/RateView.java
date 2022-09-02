@@ -19,10 +19,12 @@ import dev.itechsolutions.pos.currency.Currency;
 import dev.itechsolutions.pos.currency.DataLogicCurrencies;
 import dev.itechsolutions.util.TimestampUtil;
 import java.awt.Component;
+import java.text.MessageFormat;
 import java.util.Date;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -31,15 +33,14 @@ import java.util.logging.Logger;
 public class RateView extends javax.swing.JPanel implements EditorRecord {
     
     private Object m_oId;
-    private SentenceList m_sentCat;
     private DirtyManager m_Dirty;
     private DataLogicCurrencies m_dlCurrencies;
+    private DataLogicRate m_dlRate;
     
     private ComboBoxValModel m_currModel;
     private SentenceList m_sentCurrencies;
     
     private AppView appView;
-    private CurrencyRate rateInfo;
     
     /**
      * Creates new form RateView
@@ -52,6 +53,7 @@ public class RateView extends javax.swing.JPanel implements EditorRecord {
         try {
             appView = app;
             m_dlCurrencies = (DataLogicCurrencies) app.getBean(DataLogicCurrencies.class.getCanonicalName());
+            m_dlRate = (DataLogicRate) app.getBean(DataLogicRate.class.getCanonicalName());
             
             initComponents();
             
@@ -96,6 +98,7 @@ public class RateView extends javax.swing.JPanel implements EditorRecord {
         jDateFromLabel = new javax.swing.JLabel();
         jCurrencyLabel = new javax.swing.JLabel();
         jCurrencyCombo = new javax.swing.JComboBox<>();
+        jUpdateProductPriceBtn = new javax.swing.JButton();
 
         jDateFromText.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jDateFromText.setToolTipText("");
@@ -139,24 +142,37 @@ public class RateView extends javax.swing.JPanel implements EditorRecord {
             }
         });
 
+        jUpdateProductPriceBtn.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        jUpdateProductPriceBtn.setText(AppLocal.getIntString("update.price")); // NOI18N
+        jUpdateProductPriceBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jUpdateProductPriceBtnActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(20, 20, 20)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jCurrencyLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jRateLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jDateFromLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jRateText)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jDateFromText, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(20, 20, 20)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jCurrencyLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jRateLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jDateFromLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jDate, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jCurrencyCombo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jRateText)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jDateFromText, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jDate, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jCurrencyCombo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(62, 62, 62)
+                        .addComponent(jUpdateProductPriceBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 272, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(43, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -176,7 +192,9 @@ public class RateView extends javax.swing.JPanel implements EditorRecord {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jRateLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jRateText, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(155, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jUpdateProductPriceBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(115, Short.MAX_VALUE))
         );
 
         jDateFromText.getAccessibleContext().setAccessibleName("jTextValidFrom");
@@ -208,6 +226,27 @@ public class RateView extends javax.swing.JPanel implements EditorRecord {
     private void jCurrencyComboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCurrencyComboActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jCurrencyComboActionPerformed
+
+    private void jUpdateProductPriceBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jUpdateProductPriceBtnActionPerformed
+        try {
+            
+            if (idIsEmpty())
+                return ;
+            
+            int updates = m_dlRate.updatePriceFromCurrency(createValue());
+            String msg = MessageFormat.format(AppLocal.getIntString("price.updated"), updates);
+            
+            JOptionPane.showMessageDialog(this, msg
+                    , "OK", JOptionPane.INFORMATION_MESSAGE);
+        } catch (BasicException ex) {
+            JOptionPane.showMessageDialog(this, ex.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_jUpdateProductPriceBtnActionPerformed
+    
+    private boolean idIsEmpty() {
+        String id = (String) m_oId;
+        return (id == null || id.trim().length() == 0);
+    }
     
     @Override
     public void writeValueEOF() {
@@ -300,5 +339,6 @@ public class RateView extends javax.swing.JPanel implements EditorRecord {
     private javax.swing.JTextField jDateFromText;
     private javax.swing.JLabel jRateLabel;
     private javax.swing.JTextField jRateText;
+    private javax.swing.JButton jUpdateProductPriceBtn;
     // End of variables declaration//GEN-END:variables
 }

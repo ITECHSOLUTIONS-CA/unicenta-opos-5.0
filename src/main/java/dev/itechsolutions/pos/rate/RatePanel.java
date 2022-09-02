@@ -63,7 +63,7 @@ public class RatePanel extends JPanelTable {
     
     @Override
     public ComparatorCreator getComparatorCreator() {
-        return tlRate.getComparatorCreator(new int [] {0});
+        return tlRate.getComparatorCreator(new int [] {3, 2});
     }
     
     @Override
