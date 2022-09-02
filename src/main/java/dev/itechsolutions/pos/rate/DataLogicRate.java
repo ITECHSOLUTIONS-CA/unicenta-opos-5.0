@@ -5,18 +5,26 @@
 package dev.itechsolutions.pos.rate;
 
 import com.openbravo.basic.BasicException;
+import com.openbravo.data.loader.DataRead;
 import com.openbravo.data.loader.Datas;
 import com.openbravo.data.loader.PreparedSentence;
+import com.openbravo.data.loader.SentenceExecTransaction;
 import com.openbravo.data.loader.SentenceList;
-import com.openbravo.data.loader.SerializerRead;
 import com.openbravo.data.loader.SerializerReadBasic;
+import com.openbravo.data.loader.SerializerWriteBasic;
+import com.openbravo.data.loader.SerializerWriteBasicExt;
+import com.openbravo.data.loader.SerializerWriteString;
 import com.openbravo.data.loader.Session;
 import com.openbravo.data.loader.TableDefinition;
 import com.openbravo.format.Formats;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.BeanFactoryDataSingle;
+import com.openbravo.pos.ticket.TaxInfo;
+import dev.itechsolutions.pos.ticket.ITSProductInfo;
+import dev.itechsolutions.util.NumberUtil;
 import dev.itechsolutions.util.TimestampUtil;
 import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -74,6 +82,222 @@ public class DataLogicRate extends BeanFactoryDataSingle {
                     Datas.STRING, Datas.DOUBLE, Datas.TIMESTAMP
                     , Datas.STRING, Datas.STRING
                 }));
+    }
+    
+    /**
+     * 
+     * @author Argenis Rodríguez
+     * @return 
+     */
+    public final SentenceExecTransaction getRateInsert() {
+        return new SentenceExecTransaction(s) {
+            @Override
+            protected int execInTransaction(Object params) throws BasicException {
+                return execInsert(params);
+            }
+        };
+    }
+    
+    /**
+     * 
+     * @author Argenis Rodríguez
+     * @return 
+     */
+    public final SentenceExecTransaction getRateUpdate() {
+        return new SentenceExecTransaction(s) {
+            @Override
+            protected int execInTransaction(Object params) throws BasicException {
+                return execUpdate(params);
+            }
+        };
+    }
+    
+    /**
+     * 
+     * @author Argenis Rodríguez
+     * @return 
+     */
+    public final SentenceExecTransaction getRateDelete() {
+        return new SentenceExecTransaction(s) {
+            @Override
+            protected int execInTransaction(Object params) throws BasicException {
+                return execDelete(params);
+            }
+        };
+    }
+    
+    private int execDelete(Object params) throws BasicException {
+        
+        Object[] values = (Object[]) params;
+        int i = new PreparedSentence(s
+                , "DELETE FROM currencyRate"
+                + " WHERE ID = ?"
+                , SerializerWriteString.INSTANCE)
+                .exec(values[0]);
+        
+        afterDeleteRate(values);
+        
+        return i;
+    }
+    
+    private int execUpdate(Object params) throws BasicException {
+        
+        Object[] values = (Object[]) params;
+        int i = new PreparedSentence(s
+                , "UPDATE currencyRate SET RATE = ?"
+                        + ", DATEFROM = ?, CURRENCYID = ?"
+                        + " WHERE ID = ?"
+                , new SerializerWriteBasicExt(new Datas[] {Datas.STRING
+                        , Datas.DOUBLE
+                        , Datas.TIMESTAMP
+                        , Datas.STRING}
+                        , new int[] {1, 2, 3, 0}))
+                .exec(params);
+        
+        afterCurrencyRate(values);
+        
+        return i;
+    }
+    
+    private int execInsert(Object params) throws BasicException {
+        
+        Object[] values = (Object[]) params;
+        int i = new PreparedSentence(s
+                , "INSERT INTO currencyRate("
+                    + "ID, RATE"
+                    + ", DATEFROM, CURRENCYID)"
+                + " VALUES (?, ?, ?, ?)"
+                , new SerializerWriteBasicExt(ratedatas
+                        , new int[] {0, 1, 2, 3}))
+                .exec(params);
+        
+        afterCurrencyRate(values);
+        
+        return i;
+    }
+    
+    private void afterDeleteRate(Object [] values) throws BasicException {
+        CurrencyRate rate = new CurrencyRate(values);
+        
+        CurrencyRate actualRate = getActualRate(rate.getCurrencyId());
+        
+        if (actualRate == null
+                || rate.getDateFrom().after(TimestampUtil.now())
+                || rate.getDateFrom().before(actualRate.getDateFrom()))
+            return ;
+        
+        List<ITSProductInfo> products = getByBaseCurrencyId(rate.getCurrencyId());
+        
+        for (ITSProductInfo product: products)
+            updateProductPrice(product, actualRate);
+    }
+    
+    private void afterCurrencyRate(Object[] values) throws BasicException {
+        CurrencyRate rate = new CurrencyRate(values);
+        
+        CurrencyRate actualRate = getActualRate(rate.getCurrencyId());
+        
+        if (actualRate == null || !rate.getId().equals(actualRate.getId()))
+            return ;
+        
+        List<ITSProductInfo> products = getByBaseCurrencyId(rate.getCurrencyId());
+        
+        for (ITSProductInfo product: products)
+            updateProductPrice(product, actualRate);
+    }
+    
+    private void updateProductPrice(ITSProductInfo product, CurrencyRate rate) throws BasicException {
+        
+        double priceBuy = NumberUtil.round(product.getBasePriceBuy() * rate.getRate(), 2);
+        double priceSellTax = NumberUtil.round(product.getBasePriceSell() * rate.getRate(), 2);
+        
+        TaxInfo tax = getTaxByCategory(product.getTaxCategoryID());
+        double taxRate = tax != null ? tax.getRate() : 0.0;
+        
+        double priceSell = priceSellTax / (1 + taxRate);
+        
+        product.setPriceBuy(priceBuy);
+        product.setPriceSell(priceSell);
+        
+        updateProduct(product);
+    }
+    
+    private void updateProduct(ITSProductInfo product) throws BasicException {
+        
+        new PreparedSentence(s, "UPDATE products SET PRICEBUY = ?"
+                + ", PRICESELL = ?"
+                + " WHERE ID = ?"
+                , new SerializerWriteBasic(Datas.DOUBLE, Datas.DOUBLE, Datas.STRING))
+                .exec(product.getPriceBuy(), product.getPriceSell(), product.getID());
+    }
+    
+    private TaxInfo getTaxByCategory(String taxCategoryId) throws BasicException {
+        return (TaxInfo) new PreparedSentence(s
+                , "SELECT "
+                + "ID, "
+                + "NAME, "
+                + "CATEGORY, "
+                + "CUSTCATEGORY, "
+                + "PARENTID, "
+                + "RATE, "
+                + "RATECASCADE, "
+                + "RATEORDER "
+                + "FROM taxes "
+                + "WHERE PARENTID IS NULL "
+                + "AND CATEGORY = ? "
+                + "ORDER BY NAME "
+                , SerializerWriteString.INSTANCE
+                , (DataRead dr) -> new TaxInfo(
+                dr.getString(1),
+                dr.getString(2),
+                dr.getString(3),
+                dr.getString(4),
+                dr.getString(5),
+                dr.getDouble(6),
+                dr.getBoolean(7),
+                dr.getInt(8)))
+                .find(taxCategoryId);
+    }
+    
+    public List<ITSProductInfo> getByBaseCurrencyId(String baseCurrencyId) throws BasicException {
+        return (List<ITSProductInfo>) new PreparedSentence(s
+                , "SELECT "
+                + "ID, "
+                + "REFERENCE, "
+                + "CODE, "
+                + "CODETYPE, "
+                + "NAME, "
+                + "PRICEBUY, "
+                + "PRICESELL, "
+                + "CATEGORY, "
+                + "TAXCAT, "
+                + "ATTRIBUTESET_ID, "
+                + "STOCKCOST, "
+                + "STOCKVOLUME, "
+                + "IMAGE, "
+                + "ISCOM, "
+                + "ISSCALE, "
+                + "ISCONSTANT, "
+                + "PRINTKB, "
+                + "SENDSTATUS, "
+                + "ISSERVICE, "
+                + "ATTRIBUTES, "
+                + "DISPLAY, "
+                + "ISVPRICE, "
+                + "ISVERPATRIB, "
+                + "TEXTTIP, "
+                + "WARRANTY, "
+                + "STOCKUNITS, "
+                + "PRINTTO, "
+                + "SUPPLIER, "
+                + "UOM, "
+                + "MEMODATE, "
+                + "BASEPRICEBUY, "
+                + "BASEPRICESELL, "
+                + "BASECURRENCY "
+                + "FROM products WHERE BASECURRENCY = ?"
+                , SerializerWriteString.INSTANCE
+                , ITSProductInfo.getSerializerRead()).list(baseCurrencyId);
     }
     
     /**

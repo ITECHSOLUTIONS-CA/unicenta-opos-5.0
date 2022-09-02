@@ -28,6 +28,7 @@ public class RatePanel extends JPanelTable {
     private TableDefinition tlRate;
     private RateView jEditor;
     private ListProviderCreator lProvider;
+    private SaveProvider saveProvider;
     
     @Override
     protected void init() {
@@ -35,6 +36,8 @@ public class RatePanel extends JPanelTable {
         tlRate = dlRate.getTableRate();
         jEditor = new RateView(app, dirty);
         lProvider = new ListProviderCreator(dlRate.getCurrencyRateSt());
+        saveProvider = new SaveProvider(dlRate.getRateUpdate()
+                , dlRate.getRateInsert(), dlRate.getRateDelete());
     }
     
     @Override
@@ -50,8 +53,7 @@ public class RatePanel extends JPanelTable {
     
     @Override
     public SaveProvider getSaveProvider() {
-        return new SaveProvider(tlRate
-                , new int [] {0, 1, 2, 3});
+        return saveProvider;
     }
     
     @Override

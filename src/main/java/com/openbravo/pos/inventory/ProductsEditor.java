@@ -32,7 +32,11 @@ import com.openbravo.pos.forms.*;
 import com.openbravo.pos.sales.TaxesLogic;
 import com.openbravo.pos.suppliers.DataLogicSuppliers;
 import com.openbravo.pos.suppliers.JDialogNewSupplier;
+import dev.itechsolutions.pos.currency.Currency;
 import dev.itechsolutions.pos.currency.DataLogicCurrencies;
+import dev.itechsolutions.pos.rate.CurrencyRate;
+import dev.itechsolutions.pos.rate.DataLogicRate;
+import dev.itechsolutions.util.NumberUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.imageio.ImageIO;
@@ -53,6 +57,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -105,6 +110,7 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
   private DataLogicSuppliers m_dlSuppliers;
   
   private DataLogicCurrencies m_dlCurrencies;
+  private DataLogicRate m_dlRate;
 
   private AppView appView;
 
@@ -134,6 +140,7 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
     m_dlSystem = (DataLogicSystem) app.getBean("com.openbravo.pos.forms.DataLogicSystem");
     m_dlSuppliers = (DataLogicSuppliers) app.getBean("com.openbravo.pos.suppliers.DataLogicSuppliers");
     m_dlCurrencies = (DataLogicCurrencies) app.getBean(DataLogicCurrencies.class.getCanonicalName());
+    m_dlRate = (DataLogicRate) app.getBean(DataLogicRate.class.getCanonicalName());
     
     initComponents();
 
@@ -941,15 +948,54 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
     }
   }
   
-  /**
-   * @author Argenis Rodríguez
-   */
-  private void calculateBuyPrice() {
+  private void calculatePriceBuy(boolean validateRate) {
       if (reportlock)
           return ;
       
-      Double basePriceBuy = readCurrency(jBasePriceBuyText.getText());
+      reportlock = true;
+      calculatePrice(jBasePriceBuyText, m_jPriceBuy, validateRate);
+      reportlock = false;
+  }
+  
+  /**
+   * @author Argenis Rodríguez
+   */
+  private void calculatePrice(JTextField textFieldFrom, JTextField textFieldTo
+          , boolean validateRate) {
+      try {
+          calculatePriceFromCurrency(textFieldFrom, textFieldTo, validateRate);
+      } catch (BasicException e) {
+          JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+      }
+  }
+  
+  private void calculatePriceFromCurrency(JTextField textFieldFrom, JTextField textFieldTo
+          , boolean validateRate) throws BasicException {
+      
+      Double priceFrom = readCurrency(textFieldFrom.getText());
+      
+      if (priceFrom == null)
+          return ;
+      
       String currencyId = (String) m_CurrenciesModel.getSelectedKey();
+      CurrencyRate currRate = m_dlRate.getActualRate(currencyId);
+      
+      if (currRate == null)
+      {
+          textFieldTo.setText(Formats.CURRENCY.formatValue(0));
+          
+          if (validateRate)
+          {
+              Currency currency = (Currency) m_CurrenciesModel.getSelectedItem();
+              String message = AppLocal.getIntString("message.no.currency.conversion");
+              throw new BasicException(MessageFormat.format(message, currency.getIsoCode()));
+          }
+          
+          return ;
+      }
+      
+      Double priceTo = NumberUtil.round(priceFrom * currRate.getRate(), 2);
+      textFieldTo.setText(Formats.CURRENCY.formatValue(priceTo));
   }
   
   // end of speed test
@@ -958,7 +1004,7 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
     if (!reportlock) {
       reportlock = true;
 
-      Double dPriceBuy = readCurrency(jBasePriceBuyText.getText());
+      Double dPriceBuy = readCurrency(m_jPriceBuy.getText());
       Double dPriceSell = (Double) pricesell;
 
       if (dPriceBuy == null || dPriceSell == null) {
@@ -992,7 +1038,7 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
     if (!reportlock) {
       reportlock = true;
 
-      Double dPriceBuy = readCurrency(jBasePriceBuyText.getText());
+      Double dPriceBuy = readCurrency(m_jPriceBuy.getText());
       Double dPriceSell = (Double) pricesell;
 
       if (dPriceBuy == null || dPriceSell == null) {
@@ -1012,7 +1058,7 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
     if (!reportlock) {
       reportlock = true;
 
-      Double dPriceBuy = readCurrency(jBasePriceBuyText.getText());
+      Double dPriceBuy = readCurrency(m_jPriceBuy.getText());
       Double dMargin = readPercent(m_jmargin.getText());
 
       if (dMargin == null || dPriceBuy == null) {
@@ -1054,10 +1100,24 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
       priceselllock = false;
     }
   }
-
+  
+  private void calculateSellPriceFromCurrency() {
+      calculatePrice(jBasePriceSellText, m_jPriceSellTax, false);
+      /*calculatePriceSellfromPST();
+      calculateMargin();
+      calculateGP();*/
+  }
+  
   private class PriceSellManager implements DocumentListener {
     @Override
     public void changedUpdate(DocumentEvent e) {
+      
+      if (jBasePriceSellText.getDocument().equals(e.getDocument()))
+      {
+          calculateSellPriceFromCurrency();
+          return ;
+      }
+      
       if (!priceselllock) {
         priceselllock = true;
         pricesell = readCurrency(m_jPriceSell.getText());
@@ -1070,6 +1130,13 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
 
     @Override
     public void insertUpdate(DocumentEvent e) {
+      
+      if (jBasePriceSellText.getDocument().equals(e.getDocument()))
+      {
+          calculateSellPriceFromCurrency();
+          return ;
+      }
+      
       if (!priceselllock) {
         priceselllock = true;
         pricesell = readCurrency(m_jPriceSell.getText());
@@ -1082,6 +1149,13 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
 
     @Override
     public void removeUpdate(DocumentEvent e) {
+      
+      if (jBasePriceSellText.getDocument().equals(e.getDocument()))
+      {
+          calculateSellPriceFromCurrency();
+          return ;
+      }
+      
       if (!priceselllock) {
         priceselllock = true;
         pricesell = readCurrency(m_jPriceSell.getText());
@@ -1097,6 +1171,9 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
     @Override
     public void changedUpdate(DocumentEvent e) {
       
+      if (e.getDocument().equals(jBasePriceBuyText.getDocument()))
+          calculatePriceBuy(false);
+      
       calculateMargin();
       calculatePriceSellTax();
       calculateGP();
@@ -1104,6 +1181,10 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
     
     @Override
     public void insertUpdate(DocumentEvent e) {
+      
+      if (e.getDocument().equals(jBasePriceBuyText.getDocument()))
+          calculatePriceBuy(false);
+      
       calculateMargin();
       calculatePriceSellTax();
       calculateGP();
@@ -1111,6 +1192,10 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
     
     @Override
     public void removeUpdate(DocumentEvent e) {
+      
+      if (e.getDocument().equals(jBasePriceBuyText.getDocument()))
+          calculatePriceBuy(false);
+      
       calculateMargin();
       calculatePriceSellTax();
       calculateGP();
@@ -1118,6 +1203,14 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
     
     @Override
     public void actionPerformed(ActionEvent e) {
+      
+      if (e.getSource().equals(jCurrencyCombo))
+      {
+          calculatePriceBuy(true);
+          calculateSellPriceFromCurrency();
+          return ;
+      }
+      
       calculateMargin();
       calculatePriceSellTax();
       calculateGP();

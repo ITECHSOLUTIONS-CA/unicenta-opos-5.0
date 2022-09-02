@@ -279,7 +279,7 @@ public class RateView extends javax.swing.JPanel implements EditorRecord {
         rate[1] = Formats.DOUBLE.parseValue(jRateText.getText(), 0.0);
         rate[2] = Formats.DATE.parseValue(jDateFromText.getText(), TimestampUtil.now());
         rate[3] = (String) m_currModel.getSelectedKey();
-        rate[4] = curr.getIsoCode();
+        rate[4] = curr != null ? curr.getIsoCode() : "";
         
         return rate;
     }

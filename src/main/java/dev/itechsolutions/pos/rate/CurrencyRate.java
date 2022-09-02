@@ -19,6 +19,13 @@ public class CurrencyRate {
         this.currencyId = currencyId;
     }
     
+    public CurrencyRate(Object[] rate) {
+        id = (String) rate[0];
+        this.rate = (Double) rate[1];
+        dateFrom = (Date) rate[2];
+        currencyId = (String) rate[3];
+    }
+    
     public void setId(String id) {
         this.id = id;
     }
