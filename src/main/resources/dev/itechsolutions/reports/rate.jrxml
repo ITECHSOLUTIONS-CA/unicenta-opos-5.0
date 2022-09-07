@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.17.0.final using JasperReports Library version 6.17.0-6d93193241dd8cc42629e188b94f9e0bc5722efd  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CurrencyRates" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="c74c54ef-d8ce-44fe-a4da-274fa98cd81b">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Unicenta"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<queryString>
+		<![CDATA[SELECT 
+	cr.datefrom 
+	, cr.rate 
+	, CONCAT(c.iso_code, ' - ', c.name) currency 
+FROM currencyRate cr 
+INNER JOIN currency c ON c.id = cr.currencyId 
+ORDER BY cr.datefrom DESC, cr.currencyId]]>
+	</queryString>
+	<field name="datefrom" class="java.util.Date">
+		<property name="com.jaspersoft.studio.field.name" value="datefrom"/>
+		<property name="com.jaspersoft.studio.field.label" value="datefrom"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="currencyRate"/>
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="rate" class="java.lang.Double">
+		<property name="com.jaspersoft.studio.field.name" value="rate"/>
+		<property name="com.jaspersoft.studio.field.label" value="rate"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="currencyRate"/>
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="currency" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="currency"/>
+		<property name="com.jaspersoft.studio.field.label" value="currency"/>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="42">
+			<textField>
+				<reportElement x="-20" y="10" width="595" height="30" forecolor="#0597FF" uuid="d06eb91d-eaa2-4536-9995-f638111add46"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$R{label.title.rates}]]></textFieldExpression>
+			</textField>
+			<rectangle>
+				<reportElement x="-20" y="40" width="595" height="2" backcolor="#0DFFF3" uuid="e778ed5e-ce97-490e-b84a-bdcd3d6c8bf6"/>
+				<graphicElement>
+					<pen lineColor="rgba(0, 0, 0, 0.0)"/>
+				</graphicElement>
+			</rectangle>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="24">
+			<textField>
+				<reportElement x="68" y="0" width="141" height="21" uuid="47e07d01-b24c-4e50-ba40-a9d70c57c268"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$R{label.date.from}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="209" y="0" width="159" height="21" uuid="811c3397-f95a-4c9f-b2c0-6bd9eeaea4fc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$R{label.currency}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="368" y="0" width="150" height="21" uuid="d369af8c-7d78-450f-932f-0138d3f88018"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$R{label.rate}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="29" splitType="Stretch">
+			<textField>
+				<reportElement x="210" y="4" width="158" height="23" uuid="034e80b0-9979-461d-adfa-5c33293e136c"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{currency}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="368" y="4" width="150" height="23" uuid="d29d4612-7da8-47fb-806d-1e97b576b3da"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{rate}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="69" y="4" width="141" height="23" uuid="a7c5ef60-ae28-4241-a9e5-06abad2a56cd"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[com.openbravo.format.Formats.DATE.formatValue($F{datefrom})]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

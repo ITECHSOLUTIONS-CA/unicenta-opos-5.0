@@ -32,7 +32,9 @@ public abstract class PaymentInfo {
     public abstract double getTendered();
     public abstract String getCardName();
     public abstract String getVoucher();        
-
+    public abstract String getCurrencyId();
+    public abstract double getRate();
+    
     public String printTotal() {
         return Formats.CURRENCY.formatValue(getTotal());
     }

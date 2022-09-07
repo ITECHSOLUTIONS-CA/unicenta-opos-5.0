@@ -18,15 +18,27 @@
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 
 package com.openbravo.pos.payment;
+import com.openbravo.basic.BasicException;
+import com.openbravo.data.gui.ComboBoxValModel;
 import com.openbravo.format.Formats;
 import com.openbravo.pos.customers.CustomerInfoExt;
 import com.openbravo.pos.forms.AppConfig;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.util.RoundUtils;
+import dev.itechsolutions.pos.currency.Currency;
+import dev.itechsolutions.pos.currency.DataLogicCurrencies;
+import dev.itechsolutions.pos.rate.CurrencyRate;
+import dev.itechsolutions.pos.rate.DataLogicRate;
 import java.awt.Component;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.text.MessageFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -38,11 +50,27 @@ public class JPaymentCheque extends javax.swing.JPanel implements JPaymentInterf
 
     private double m_dPaid;
     private double m_dTotal;
+    private double m_dTotalBase;
+    private double m_rate;
     private Boolean priceWith00;
+    private DataLogicCurrencies dlCurr;
+    private DataLogicRate dlRate;
+    private ComboBoxValModel m_currModel;
+    private Date m_date;
+    
+    public JPaymentCheque(JPaymentNotifier notifier, DataLogicCurrencies dlCurr
+            , DataLogicRate dlRate, Date date) {
+        this(notifier);
+        this.dlCurr = dlCurr;
+        this.dlRate = dlRate;
+        m_date = date;
+        
+        m_currModel = new ComboBoxValModel();
+    } 
     
     /** Creates new form JPaymentCash
      * @param notifier */
-    public JPaymentCheque(JPaymentNotifier notifier) {
+    private JPaymentCheque(JPaymentNotifier notifier) {
         
         m_notifier = notifier;
         
@@ -74,14 +102,30 @@ public class JPaymentCheque extends javax.swing.JPanel implements JPaymentInterf
     @Override
     public void activate(CustomerInfoExt customerext, double dTotal, String transID) {
         
-        m_dTotal = dTotal;
-        
-        
-        m_jTendered.reset();
-        m_jTendered.activate();
-        
-        printState();
-        
+        try {
+            m_dTotal = dTotal;
+            m_dTotalBase = dTotal;
+            
+            m_jTendered.reset();
+            m_jTendered.activate();
+            
+            List<Currency> currencies = dlCurr.getAll();
+            Currency baseCurrency = dlRate.getBaseCurrency(currencies, m_date);
+            m_currModel = new ComboBoxValModel(currencies);
+            
+            if (baseCurrency != null)
+            {
+                m_currModel.setSelectedKey(baseCurrency.getId());
+                m_rate = 1;
+            } else
+                m_rate = -1;
+            
+            jCurrencyCombo.setModel(m_currModel);
+            
+            printState();
+        } catch (BasicException ex) {
+            Logger.getLogger(JPaymentCheque.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -90,9 +134,13 @@ public class JPaymentCheque extends javax.swing.JPanel implements JPaymentInterf
      */
     @Override
     public PaymentInfo executePayment() {
-        return new PaymentInfoTicket(m_dPaid, "cheque");      
+        PaymentInfoTicket pInfo = new PaymentInfoTicket(m_dPaid * m_rate, "cheque");
+        pInfo.setCurrencyId((String) m_currModel.getSelectedKey());
+        pInfo.setRate(m_rate);
+        
+        return pInfo;      
     }
-
+    
     /**
      *
      * @return
@@ -142,6 +190,8 @@ public class JPaymentCheque extends javax.swing.JPanel implements JPaymentInterf
         jPanel4 = new javax.swing.JPanel();
         jLabel8 = new javax.swing.JLabel();
         m_jMoneyEuros = new javax.swing.JLabel();
+        jLabel1 = new javax.swing.JLabel();
+        jCurrencyCombo = new javax.swing.JComboBox<>();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -180,11 +230,56 @@ public class JPaymentCheque extends javax.swing.JPanel implements JPaymentInterf
         jPanel4.add(m_jMoneyEuros);
         m_jMoneyEuros.setBounds(120, 4, 180, 30);
 
+        jLabel1.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        jLabel1.setText(AppLocal.getIntString("label.currency")); // NOI18N
+        jPanel4.add(jLabel1);
+        jLabel1.setBounds(10, 40, 110, 40);
+
+        jCurrencyCombo.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        jCurrencyCombo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCurrencyComboActionPerformed(evt);
+            }
+        });
+        jPanel4.add(jCurrencyCombo);
+        jCurrencyCombo.setBounds(120, 40, 180, 40);
+
         add(jPanel4, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
-    
+
+    private void jCurrencyComboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCurrencyComboActionPerformed
+        try {
+            String currencyId = (String) m_currModel.getSelectedKey();
+            
+            if (currencyId == null
+                    || currencyId.trim().length() == 0)
+                return ;
+            
+            CurrencyRate currRate = dlRate.getRate(currencyId, m_date);
+            
+            if (currRate == null)
+            {
+                String msg = AppLocal.getIntString("message.no.currency.conversion");
+                Currency currency = (Currency) m_currModel.getSelectedItem();
+                msg = MessageFormat.format(msg, currency.getIsoCode());
+                //m_currModel.setSelectedItem(null);
+                m_rate = -1;
+                JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
+                return ;
+            }
+            m_rate = currRate.getRate();
+            m_dTotal = m_rate != 0 ? m_dTotalBase / m_rate : 0;
+            m_jTendered.setDoubleValue(null);
+            
+            printState();
+        } catch (BasicException ex) {
+            Logger.getLogger(JPaymentCheque.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jCurrencyComboActionPerformed
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JComboBox<String> jCurrencyCombo;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;

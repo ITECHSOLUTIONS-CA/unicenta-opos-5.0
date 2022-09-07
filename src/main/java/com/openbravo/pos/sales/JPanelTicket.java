@@ -1816,7 +1816,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
           paymentdialog.setTransactionID(ticket.getTransactionID());
 
-          if (paymentdialog.showDialog(ticket.getTotal(), ticket.getCustomer())) {
+          if (paymentdialog.showDialog(ticket.getTotal(), ticket.getCustomer(), ticket.getDate())) {
 
             ticket.setPayments(paymentdialog.getSelectedPayments());
 

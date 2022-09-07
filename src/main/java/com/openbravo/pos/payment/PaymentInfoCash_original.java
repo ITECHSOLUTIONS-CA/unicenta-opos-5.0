@@ -94,5 +94,15 @@ public class PaymentInfoCash_original extends PaymentInfo {
     public String getVoucher() {
         return null;
     }
+
+    @Override
+    public String getCurrencyId() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public double getRate() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
     
 }

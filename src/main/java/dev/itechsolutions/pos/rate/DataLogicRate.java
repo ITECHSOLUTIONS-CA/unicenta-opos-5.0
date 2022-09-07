@@ -20,11 +20,14 @@ import com.openbravo.format.Formats;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.BeanFactoryDataSingle;
 import com.openbravo.pos.ticket.TaxInfo;
+import dev.itechsolutions.pos.currency.Currency;
 import dev.itechsolutions.pos.ticket.ITSProductInfo;
 import dev.itechsolutions.util.NumberUtil;
 import dev.itechsolutions.util.TimestampUtil;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -82,6 +85,44 @@ public class DataLogicRate extends BeanFactoryDataSingle {
                     Datas.STRING, Datas.DOUBLE, Datas.TIMESTAMP
                     , Datas.STRING, Datas.STRING
                 }));
+    }
+    
+    public Currency getBaseCurrency(List<Currency> currencies, Date date) {
+        return currencies.stream()
+                .filter(currency -> isBaseCurrency(currency.getId(), date))
+                .findFirst()
+                .orElse(null);
+    }
+    
+    public Currency getBaseCurrency(Date date) throws BasicException {
+        List<Currency> currencies = getAll();
+        
+        return getBaseCurrency(currencies, date);
+    }
+    
+    private boolean isBaseCurrency(String currencyId, Date date) {
+        try {
+            CurrencyRate rate = getRate(currencyId, date);
+            
+            if (rate == null)
+                return false;
+            
+            return rate.getRate() == 1;
+        } catch (BasicException ex) {
+            Logger.getLogger(DataLogicRate.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return false;
+    }
+    
+    private List<Currency> getAll() throws BasicException {
+        return (List<Currency>) new PreparedSentence(s
+                    , "SELECT id, name, iso_code"
+                    + " FROM currency"
+                , null
+                , dr -> new Currency(dr.getString(1)
+                        , dr.getString(2), dr.getString(3)))
+                .list();
     }
     
     /**

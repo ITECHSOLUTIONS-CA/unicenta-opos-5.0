@@ -28,6 +28,8 @@ public class PaymentInfoCash extends PaymentInfo {
     private double m_dTotal;
     private double m_dTendered;
     private String m_dCardName =null;
+    private double m_rate;
+    private String m_currencyId;
 //    private double m_dTip;    
     
     /**
@@ -129,5 +131,22 @@ public class PaymentInfoCash extends PaymentInfo {
     public String getVoucher() {
         return null;
     }    
+
+    @Override
+    public String getCurrencyId() {
+        return m_currencyId;
+    }
     
+    @Override
+    public double getRate() {
+        return m_rate;
+    }
+    
+    public void setRate(double rate) {
+        m_rate = rate;
+    }
+    
+    public void setCurrencyId(String currencyId) {
+        m_currencyId = currencyId;
+    }
 }

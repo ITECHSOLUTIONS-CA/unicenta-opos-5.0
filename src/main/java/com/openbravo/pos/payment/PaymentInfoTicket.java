@@ -39,7 +39,9 @@ public class PaymentInfoTicket extends PaymentInfo implements SerializableRead  
     private String m_sVoucher;
     private String sVoucher;
     private String m_sVoucherNumber;
-            
+    private String m_currencyId;
+    private double m_rate;
+    
     /** Creates a new instance of PaymentInfoTicket
      * @param dTicket
      * @param sName */
@@ -151,4 +153,22 @@ public class PaymentInfoTicket extends PaymentInfo implements SerializableRead  
     public String printVoucherNumber() {
         return m_sVoucherNumber;    
     }    
+    
+    public void setCurrencyId(String currencyId) {
+        m_currencyId = currencyId;
+    }
+    
+    public void setRate(double rate) {
+        m_rate = rate;
+    }
+    
+    @Override
+    public String getCurrencyId() {
+        return m_currencyId;
+    }
+    
+    @Override
+    public double getRate() {
+        return m_rate;
+    }
 }
