@@ -1003,3 +1003,28 @@ INSERT INTO ticketsnum_payment VALUES(1);
 
 -- ADD APPLICATION VERSION
 INSERT INTO applications(id, name, version) VALUES($APP_ID{}, $APP_NAME{}, $APP_VERSION{});
+
+
+CREATE TABLE currency (
+	`id` varchar(255) NOT NULL
+	, `name` varchar(255) NOT NULL
+	, `iso_code` varchar(5) NOT NULL
+	, PRIMARY KEY (`id`)
+	, UNIQUE KEY `currency_name_inx` (`name`)
+	, UNIQUE KEY `currency_iso_code_inx` (`iso_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE currencyRate(
+	`id` varchar(255) NOT NULL
+	, `rate` double NOT NULL
+	, `datefrom` datetime NOT NULL
+	, `currencyId` varchar(255) NOT NULL
+	, PRIMARY KEY (`id`)
+	, UNIQUE KEY `datefrom_inx` (`currencyId`, `dateFrom`)
+	, CONSTRAINT `currency_rate_fk` FOREIGN KEY (`currencyId`) REFERENCES `currency`(`id`) 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC;
+
+ALTER TABLE products ADD COLUMN basepricesell double NOT NULL DEFAULT '0';
+ALTER TABLE products ADD COLUMN basepricebuy double NOT NULL DEFAULT '0';
+ALTER TABLE products ADD COLUMN basecurrency varchar(255) DEFAULT NULL;
+ALTER TABLE products ADD CONSTRAINT `products_currency` FOREIGN KEY (`basecurrency`) REFERENCES `currency`(`id`);
